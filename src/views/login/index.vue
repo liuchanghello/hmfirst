@@ -5,23 +5,23 @@
         <img src="./logo_index.png" alt />
       </div>
       <!-- 登录页面 -->
-      <el-form ref="form" :model="form" :rules='rules'>
-          <!-- prop属性需要设置到form-item上 -->
-        <el-form-item prop='mobile' >
+      <el-form ref="form" :model="form" :rules="rules">
+        <!-- prop属性需要设置到form-item上 -->
+        <el-form-item prop="mobile">
           <el-input v-model="form.mobile" placeholder="请输入手机号"></el-input>
         </el-form-item>
-        <el-form-item prop='code'>
+        <el-form-item prop="code">
           <el-row>
-            <el-col :span="14" >
+            <el-col :span="14">
               <el-input v-model="form.code" placeholder="请输入验证码"></el-input>
             </el-col>
-            <el-col :span="8" :offset='2' >
-              <el-button class='codeBtn'>请输入验证码</el-button>
+            <el-col :span="8" :offset="2">
+              <el-button class="codeBtn">请输入验证码</el-button>
             </el-col>
           </el-row>
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" class="loginbtn" @click='login'>登录</el-button>
+          <el-button type="primary" class="loginbtn" @click="login" :loading="loadingTag">登录</el-button>
         </el-form-item>
       </el-form>
     </div>
@@ -29,6 +29,7 @@
 </template>
 
 <script>
+import axios from 'axios'
 export default {
   data () {
     return {
@@ -46,24 +47,48 @@ export default {
           { required: true, message: '请输入验证码', trigger: 'blur' },
           { min: 6, max: 6, message: '长度必须为6', trigger: 'blur' }
         ]
-      }
+      },
+      loadingTag: false
     }
   },
   methods: {
     login () {
       //   得到el-form元素
-    //   console.log(this.$refs)
-    // validate: 验证当前表单元素中所有的规则
+      //   console.log(this.$refs)
+      // validate: 验证当前表单元素中所有的规则，是否填写完毕 跟上面的required相关，而手机账号名和验证码是否正确是跟底下的接口相关的
       this.$refs['form'].validate(valid => {
         console.log(valid)
         //   valid为true时验证通过
         // valid为false时验证不通过
         if (valid) {
-          console.log('验证通过')
+          //   console.log('验证通过')
+          //  提交数据
+          this.msgSubmit()
         } else {
           console.log('验证不通过')
         }
       })
+    },
+    msgSubmit () {
+      this.loadingTag = true
+      axios({
+        url: 'http://ttapi.research.itcast.cn/mp/v1_0/authorizations',
+        method: 'post',
+        data: this.form
+      })
+        .then(res => {
+          this.loadingTag = false
+          this.$router.push('/')
+          this.$message({
+            message: '恭喜你，登录成功',
+            type: 'success'
+          })
+        })
+        .catch(err => {
+          this.loadingTag = false
+          console.log(err)
+          this.$message.error('手机号或者密码输入错误')
+        })
     }
   }
 }
@@ -90,10 +115,10 @@ export default {
     .loginbtn {
       width: 100%;
     }
-    .codeBtn{
-       width: 100%;
-       text-align:center;
-    //    color:pink;
+    .codeBtn {
+      width: 100%;
+      text-align: center;
+      //    color:pink;
     }
   }
 }
