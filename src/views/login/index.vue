@@ -16,9 +16,18 @@
               <el-input v-model="form.code" placeholder="请输入验证码"></el-input>
             </el-col>
             <el-col :span="8" :offset="2">
-              <el-button class="codeBtn">请输入验证码</el-button>
+              <!-- :disabled='isDisabled' -->
+              <el-button class="codeBtn" @click="getCode" :disabled='!!timer'>{{ timer ? codeTime +'秒后获取验证码' : '获取验证码'}}</el-button>
             </el-col>
           </el-row>
+        </el-form-item>
+        <el-form-item prop="read">
+          <el-checkbox v-model="form.read">
+            我已阅读并同意
+            <a href="#">用户协议</a>和
+            <a href="#">隐私条款</a>
+          </el-checkbox>
+          <el-checkbox label="美食/餐厅线上活动" name="type"></el-checkbox>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" class="loginbtn" @click="login" :loading="loadingTag">登录</el-button>
@@ -35,7 +44,8 @@ export default {
     return {
       form: {
         mobile: '',
-        code: ''
+        code: '',
+        read: false
       },
       rules: {
         mobile: [
@@ -46,9 +56,20 @@ export default {
         code: [
           { required: true, message: '请输入验证码', trigger: 'blur' },
           { min: 6, max: 6, message: '长度必须为6', trigger: 'blur' }
+        ],
+        read: [
+          { required: true, message: '请先阅读用户协议', trigger: 'change' },
+          // 限制结果必须为true，和上面一样，上面第一个数组为必填，第二个数组为限制长度(限制输入框内信息)
+          // pattern:匹配结果只能为true的
+          { pattern: /true/, message: '请先阅读用户协议', trigger: 'change' }
         ]
       },
-      loadingTag: false
+      loadingTag: false,
+      // 倒计时的时候
+      codeTime: 10,
+      // 设置一个定时器,
+      timer: null
+      // isDisabled:false,
     }
   },
   methods: {
@@ -89,6 +110,33 @@ export default {
           console.log(err)
           this.$message.error('手机号或者密码输入错误')
         })
+    },
+    getCode () {
+      // 获取dom表单
+      this.$refs['form'].validateField('mobile', errMsg => {
+        // errMsg是验证不通过时的提示信息
+        console.log(errMsg)
+        if (errMsg.trim().length > 0) {
+          //  说明errMsg存在，表示验证不通过
+          console.log('验证不通过')
+          return
+        }
+        // this.isDisabled=true
+        //  验证通过:开启定时器 倒计时
+        console.log('这是验证通过的代码')
+        this.timer = setInterval(() => {
+          this.codeTime--
+          // 当时间为0时  清除定时器
+          if (this.codeTime <= 0) {
+            clearTimeout(this.timer)
+            //  重置倒计时
+            this.codeTime = 10
+            // 将定时器重置为null
+            this.timer = null
+            // this.isDisabled=false
+          }
+        }, 1000)
+      })
     }
   }
 }
